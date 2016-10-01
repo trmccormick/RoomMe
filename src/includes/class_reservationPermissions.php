@@ -1,76 +1,62 @@
 <?php
 class reservationPermissions {
 
+  private $localvars;
+  private $engine;
+  private $this->db;
+  private $validate;
+
+  function __construct() {
+    $this->engine    = EngineAPI::singleton();
+    $this->localvars = localvars::getInstance();
+    $this->db        = db::get($this->localvars->get('dbConnectionName'));
+    $this->validate  = new validate;
+  }
+
   public function getRecords($id = null){
-      try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
-          $sql       = "SELECT * FROM `reservePermissions`";
-          $validate  = new validate;
-
-          if (isset($id)) {
-           $id        = dbSanitize($id);
-          }
-
-          // test to see if Id is present and valid
-          if(!isnull($id) && $validate->integer($id)){
-              $sql .= sprintf('WHERE id = %s LIMIT 1', $id);
-          }
-
-          // if no valid id throw an exception
-          if(!$validate->integer($id) && !isnull($id)){
-              throw new Exception("I don't want to be tried!");
-          }
-
-          // get the results of the query
-          $sqlResult = $db->query($sql);
-          // if return no results
-          // else return the data
-          if ($sqlResult->error()) {
-              throw new Exception("ERROR SQL" . $sqlResult->errorMsg());
-          }
-          if ($sqlResult->rowCount() < 1) {
-             return "There are no records in the database.";
-          }
-          else {
-              $data = array();
-              while($row = $sqlResult->fetch()){
-                  $data[] = $row;
-              }
-              return $data;
-          }
-      } catch (Exception $e) {
-          errorHandle::errorMsg($e->getMessage());
+    $sql = "SELECT * FROM `reservePermissions`";
+    try {
+      if(!isnull($id) && !$this->validate->integer($id)){
+        throw new Exception("Invalid ID provided.");
       }
+
+      if(!isnull($id)){
+        $sql .= "WHERE id = ? LIMIT 1";
+      }
+
+      $sqlResult = $this->db->query($sql,array($id));
+
+      if ($sqlResult->error()) {
+        throw new Exception("ERROR SQL" . $sqlResult->errorMsg());
+      }
+
+      return $sqlResult->fetchAll();
+    } catch (Exception $e) {
+      errorHandle::newError(__METHOD__."() - ".$e->getMessage, errorHandle::DEBUG);
+      return false;
+    }
   }
 
   public function getBuildings($id = null){
       try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
           $sql       = "SELECT * FROM `building`";
-          $validate  = new validate;
 
           if (isset($id)) {
            $id        = dbSanitize($id);
           }
 
           // test to see if Id is present and valid
-          if(!isnull($id) && $validate->integer($id)){
-              $sql .= sprintf('WHERE id = %s LIMIT 1', $id);
+          if(!isnull($id) && $this->validate->integer($id)){
+              $sql .= sprintf(' WHERE id = %s LIMIT 1', $id);
           }
 
           // if no valid id throw an exception
-          if(!$validate->integer($id) && !isnull($id)){
+          if(!$this->validate->integer($id) && !isnull($id)){
               throw new Exception("I don't want to be tried!");
           }
 
           // get the results of the query
-          $sqlResult = $db->query($sql);
+          $sqlResult = $this->db->query($sql);
           // if return no results
           // else return the data
           if ($sqlResult->error()) {
@@ -95,29 +81,24 @@ class reservationPermissions {
       // checks to see if the id passed is in the permissions database
       // if it finds it it returns true
       try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
           $sql       = "SELECT * FROM `reservePermissions`";
-          $validate  = new validate;
 
           if (isset($id)) {
            $id        = dbSanitize($id);
           }
 
           // test to see if Id is present and valid
-          if(!isnull($id) && $validate->integer($id)){
+          if(!isnull($id) && $this->validate->integer($id)){
               $sql .= sprintf('WHERE resourceID = %s LIMIT 1', $id);
           }
 
           // if no valid id throw an exception
-          if(!$validate->integer($id) && !isnull($id)){
+          if(!$this->validate->integer($id) && !isnull($id)){
               throw new Exception("I don't want to be tried!");
           }
 
           // get the results of the query
-          $sqlResult = $db->query($sql);
+          $sqlResult = $this->db->query($sql);
           // if return no results
           // else return the data
           if ($sqlResult->error()) {
@@ -139,12 +120,7 @@ class reservationPermissions {
       // checks to see if the id passed is in the permissions database
       // if it finds it it returns true
       try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
           $sql       = "SELECT * FROM `reservePermissions`";
-          $validate  = new validate;
 
           if (isset($id)) {
            $id        = dbSanitize($id);
@@ -155,22 +131,22 @@ class reservationPermissions {
           }
 
           // test to see if Id and Email is present and valid
-          if(!isnull($id) && $validate->integer($id) && !isnull($email) && $validate->emailAddr($email)){
+          if(!isnull($id) && $this->validate->integer($id) && !isnull($email) && $this->validate->emailAddr($email)){
               $sql .= sprintf(' WHERE resourceID="%s" AND email="%s" LIMIT 1', $id, $email);
           }
 
           // if no valid id throw an exception
-          if(!$validate->integer($id) && !isnull($id)){
+          if(!$this->validate->integer($id) && !isnull($id)){
               throw new Exception("Error No Valid Resource ID");
           }
 
           // if no valid email throw an exception
-          if(!$validate->emailAddr($email) && !isnull($email)){
+          if(!$this->validate->emailAddr($email) && !isnull($email)){
               throw new Exception("Error No Valid Email Address");
           }
 
           // get the results of the query
-          $sqlResult = $db->query($sql);
+          $sqlResult = $this->db->query($sql);
 
           if ($sqlResult->error()) {
               throw new Exception("ERROR SQL" . $sqlResult->errorMsg());
@@ -190,10 +166,6 @@ class reservationPermissions {
 
   public function setupForm($id = null){
        try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $validate  = new validate;
           if (isset($id)) {
            $id        = dbSanitize($id);
           }
@@ -210,7 +182,7 @@ class reservationPermissions {
           $form->updateTitle = "Update Permissions";
 
           // if no valid id throw an exception
-          if(!$validate->integer($id) && !isnull($id)){
+          if(!$this->validate->integer($id) && !isnull($id)){
               throw new Exception(__METHOD__.'() - Not a valid integer, please check the integer and try again.');
           }
 
@@ -281,24 +253,19 @@ class reservationPermissions {
 
   public function deleteRecord($id = null){
       try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
-          $validate  = new validate;
 
           if (isset($id)) {
            $id        = dbSanitize($id);
           }
 
           // test to see if Id is present and valid
-          if(isnull($id) || !$validate->integer($id)){
+          if(isnull($id) || !$this->validate->integer($id)){
               throw new Exception(__METHOD__.'() -Delete failed, improper id or no id was sent');
           }
 
           // SQL Results
           $sql = sprintf("DELETE FROM `reservePermissions` WHERE id=%s LIMIT 1", $id);
-          $sqlResult = $db->query($sql);
+          $sqlResult = $this->db->query($sql);
           if(!$sqlResult) {
               throw new Exception(__METHOD__.'Failed to delete permissions.');
           }
@@ -313,11 +280,6 @@ class reservationPermissions {
 
   public function insertRecord($id, $type, $email){
       try {
-          // call engine
-          $engine    = EngineAPI::singleton();
-          $localvars = localvars::getInstance();
-          $db        = db::get($localvars->get('dbConnectionName'));
-          $validate  = new validate;
 
           if (isset($id)) {
            $id        = dbSanitize($id);
@@ -332,23 +294,23 @@ class reservationPermissions {
           }
 
           // test to see if Id is present and valid
-          if(isnull($id) || !$validate->integer($id)){
+          if(isnull($id) || !$this->validate->integer($id)){
               throw new Exception(__METHOD__.'() -insert failed, improper resource id or no id was sent');
           }
 
           // test to see if type is present and valid
-          if(isnull($type) || !$validate->integer($type)){
+          if(isnull($type) || !$this->validate->integer($type)){
               throw new Exception(__METHOD__.'() -insert failed, improper resource type or no type was sent');
           }
 
           // test to see if email is present and valid
-          if(isnull($email) || !$validate->emailAddr($email)){
+          if(isnull($email) || !$this->validate->emailAddr($email)){
               throw new Exception(__METHOD__.'() -insert failed, improper email address or no email was sent');
           }
 
           // SQL Results
           $sql = sprintf("INSERT INTO `reservePermissions` (resourceID, resourceType, email) VALUES (?, ?, ?)");
-          $sqlResult = $db->query($sql, array($id, $type, $email));
+          $sqlResult = $this->db->query($sql, array($id, $type, $email));
 
           if(!$sqlResult) {
               throw new Exception(__METHOD__.'Failed to delete permissions.');
@@ -365,9 +327,6 @@ class reservationPermissions {
 
   public function renderDataTable(){
     try {
-        $engine     = EngineAPI::singleton();
-        $localvars  = localvars::getInstance();
-        $validate   = new validate;
         $dataRecord = self::getRecords();
         $records    = "";
 
@@ -417,9 +376,6 @@ class reservationPermissions {
 
   public function uploadForm(){
     try {
-        $engine     = EngineAPI::singleton();
-        $localvars  = localvars::getInstance();
-        $validate   = new validate;
 
         $dataRecord = self::getBuildings();
         $records    = "";
